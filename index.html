@@ -12,6 +12,15 @@
             margin: 0px;
             overflow: hidden;
         }
+        #progress {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 100px;
+            margin: auto;
+        }
 
 
     </style>
@@ -19,7 +28,7 @@
 
 <body>
 
-
+<div id="progress"></div>
 <script src="build/three.js"></script>
 
 <script src="build/inflate.min.js"></script>
@@ -51,6 +60,8 @@
 
         container = document.createElement( 'div' );
         document.body.appendChild( container );
+
+        var progress = document.getElementById('progress');
 
         camera = new THREE.PerspectiveCamera( 15, window.innerWidth / window.innerHeight, 1, 1000 );
         camera.position.set( -45, 18, 0 );
@@ -96,8 +107,26 @@
         grid.material.transparent = true;
         //	scene.add( grid );
 
+        const loadingManager = new THREE.LoadingManager();
+        loadingManager.setURLModifier( function( url ) {
+
+            // this function is called for each asset request
+
+            if ( url === './texture1.png' ) {
+
+                url = './texture2.png'
+
+            }else{
+                url = 'fbx/b/source/Mini DL.fbx';
+            }
+
+            return url;
+
+        } );
+
         // model
-        var loader = new THREE.FBXLoader();
+       // var loader = new THREE.FBXLoader( loadingManager);
+        var loader = new THREE.FBXLoader( );
         loader.load( 'fbx/b/source/Mini DL.fbx', function ( object ) {
 
             object.mixer = new THREE.AnimationMixer( object );
@@ -105,6 +134,7 @@
 
             var action = object.mixer.clipAction( object.animations[ 0 ] );
             action.play();
+
 
             object.traverse( function ( child ) {
 
@@ -120,6 +150,12 @@
 
             scene.add( object );
 
+        },function ( xhr ) {
+            progress.textContent = Math.round((xhr.loaded / xhr.total * 100)) + '% loaded';
+            if((xhr.loaded / xhr.total * 100) === 100) {
+                progress.style.display = "none";
+            }
+            console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
         } );
 
         renderer = new THREE.WebGLRenderer( { alpha: true } );
@@ -133,7 +169,7 @@
 
         // stats
         stats = new Stats();
-        container.appendChild( stats.dom );
+       // container.appendChild( stats.dom );
 
     }
 
@@ -164,7 +200,7 @@
 
         renderer.render( scene, camera );
 
-        stats.update();
+       // stats.update();
 
     }
 
